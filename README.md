@@ -3,7 +3,7 @@
 A Home Assistant / ESPHome-integrated LED matrix sign built from a VEVOR programmable P10 LED sign, showing a clock and "Now Playing" info from Plex.
 
 ## What I Wanted
-I wanted to create an LED sign for our home theater that would auto update via Home Assistant to show what was currently playing in the Home Theater. I have a TV acting as a constantly rotating movie poster based on my Plex library already that shows Now Playing when this happens but I wanted to add the sign as well. When nothing is playing, the sign would just scroll text like "Home Theater [TIME]". I could also change it for parties or any other scenario. All of these things turn on and off based on occupancy sensors in my home.
+I wanted to create an LED sign for our home theater that would auto update via Home Assistant to show what was currently playing in the Home Theater. I have a TV acting as a constantly rotating movie poster based on my Plex library already that shows Now Playing when this happens but I wanted to add the sign as well. When nothing is playing, the sign would just scroll text like "Home Theater [TIME]". I could also change it for parties or any other scenario. All of these things turn on and off based on occupancy sensors in my home. I wanted to do it as cheap as possible and VEVOR sells hub75 matrix led signs on Amazon for cheaper than you can buy the panels and wire yourself. Now I know why.
 
 The panels turned out to use a non-standard, undocumented internal wiring
 scheme that no existing library or driver supported out of the box. This repo
@@ -11,7 +11,7 @@ contains the final working firmware **and** the full diagnostic process that
 led to it, because the process is likely more useful to the next person than
 the code alone — if you have a similarly "unsupported" quarter-scan panel,
 the [troubleshooting journey](/TROUBLESHOOTING_JOURNEY.md) below is a
-template for figuring out yours too.
+template for figuring out yours too. 
 
 ## Quick facts
 
