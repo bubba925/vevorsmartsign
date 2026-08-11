@@ -1,0 +1,338 @@
+# Board: Generic ESP32-S3 Board (Generic)
+# Definition: definitions/boards/generic-esp32s3/manifest.yaml
+esphome:
+  name: led-sign
+  friendly_name: LED Sign
+
+esp32:
+  variant: esp32s3
+  framework:
+    type: arduino
+
+logger:
+  level: DEBUG
+
+api:
+  encryption:
+    key: "[INSERT KEY]"
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  use_address: [for static address]
+  ap:
+    ssid: LED Sign Fallback Hotspot
+    password: "[fallback password]"
+
+captive_portal:
+
+external_components:
+  - source:
+      type: local
+      path: components
+
+psram:
+  mode: octal              # this board's N16R8 module has octal PSRAM
+  speed: 80MHz
+
+# --- Time, pulled from Home Assistant ---
+time:
+  - platform: homeassistant
+    id: ha_time
+
+# --- Editable idle text, settable from Home Assistant ---
+text:
+  - platform: template
+    id: idle_label
+    name: "LED Sign Idle Text"
+    optimistic: true
+    restore_value: true
+    initial_value: "Home Theater"
+    mode: text
+
+globals:
+  - id: scroll_offset
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: sign_powered
+    type: bool
+    restore_value: no
+    initial_value: 'true'
+  - id: show_time
+    type: bool
+    restore_value: no
+    initial_value: 'true'
+  - id: text_r
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: text_g
+    type: float
+    restore_value: no
+    initial_value: '0.784'
+  - id: text_b
+    type: float
+    restore_value: no
+    initial_value: '1.0'
+  - id: font_size_choice
+    type: int
+    restore_value: no
+    initial_value: '1'
+  - id: font_family_choice
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: last_published_msg
+    type: std::string
+    restore_value: no
+
+interval:
+  - interval: 50ms
+    then:
+      - lambda: |-
+          id(scroll_offset) -= 1;
+
+# --- Home Assistant controls: power, clock visibility, brightness, restart ---
+switch:
+  - platform: template
+    name: "LED Sign Power"
+    id: sign_power_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    icon: "mdi:power"
+    turn_on_action:
+      - lambda: id(sign_powered) = true;
+    turn_off_action:
+      - lambda: id(sign_powered) = false;
+
+  - platform: template
+    name: "LED Sign Show Time"
+    id: show_time_switch
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    icon: "mdi:clock-outline"
+    turn_on_action:
+      - lambda: id(show_time) = true;
+    turn_off_action:
+      - lambda: id(show_time) = false;
+
+number:
+  - platform: template
+    name: "LED Sign Brightness"
+    id: sign_brightness
+    icon: "mdi:brightness-6"
+    min_value: 0
+    max_value: 255
+    step: 5
+    initial_value: 128
+    optimistic: true
+    set_action:
+      - lambda: |-
+          id(matrix_display).set_runtime_brightness((uint8_t) x);
+
+button:
+  - platform: restart
+    name: "LED Sign Restart"
+
+select:
+  - platform: template
+    name: "LED Sign Font Size"
+    id: font_size_select
+    optimistic: true
+    options:
+      - "Small"
+      - "Medium"
+      - "Large"
+    initial_option: "Medium"
+    set_action:
+      - lambda: |-
+          if (x == "Small") id(font_size_choice) = 0;
+          else if (x == "Medium") id(font_size_choice) = 1;
+          else id(font_size_choice) = 2;
+
+  - platform: template
+    name: "LED Sign Font Family"
+    id: font_family_select
+    optimistic: true
+    options:
+      - "Roboto"
+      - "Pixel (Press Start 2P)"
+    initial_option: "Roboto"
+    set_action:
+      - lambda: |-
+          if (x == "Roboto") id(font_family_choice) = 0;
+          else id(font_family_choice) = 1;
+
+# --- Color picker: doesn't drive real GPIO, just stores RGB values that
+# the display lambda reads for the idle/clock text color ---
+output:
+  - platform: template
+    id: text_red_out
+    type: float
+    write_action:
+      - lambda: id(text_r) = state;
+  - platform: template
+    id: text_green_out
+    type: float
+    write_action:
+      - lambda: id(text_g) = state;
+  - platform: template
+    id: text_blue_out
+    type: float
+    write_action:
+      - lambda: id(text_b) = state;
+
+light:
+  - platform: rgb
+    name: "LED Sign Color"
+    id: sign_color_light
+    red: text_red_out
+    green: text_green_out
+    blue: text_blue_out
+    restore_mode: RESTORE_DEFAULT_ON
+    default_transition_length: 0s
+
+sensor:
+  - platform: wifi_signal
+    name: "LED Sign WiFi Signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "LED Sign Uptime"
+
+# --- Plex now-playing info: two instances, "_3" takes priority if both active ---
+text_sensor:
+  - platform: homeassistant
+    id: plex_title_1
+    entity_id: [insert entity id]
+
+  - platform: homeassistant
+    id: plex_title_3
+    entity_id: [second entity id, I have two instances]
+
+  - platform: template
+    name: "LED Sign Current Display"
+    id: current_display_sensor
+    icon: "mdi:led-strip-variant"
+
+font:
+  - file: "gfonts://Roboto"
+    id: font_roboto_small
+    size: 8
+    glyphs: "!\"%()+=,-_.:°0123456789 abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  - file: "gfonts://Roboto"
+    id: font_roboto_medium
+    size: 12
+    glyphs: "!\"%()+=,-_.:°0123456789 abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  - file: "gfonts://Roboto"
+    id: font_roboto_large
+    size: 14
+    glyphs: "!\"%()+=,-_.:°0123456789 abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  - file: "gfonts://Press Start 2P"
+    id: font_pixel_small
+    size: 8
+    glyphs: "!\"%()+=,-_.:°0123456789 abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  - file: "gfonts://Press Start 2P"
+    id: font_pixel_medium
+    size: 12
+    glyphs: "!\"%()+=,-_.:°0123456789 abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  - file: "gfonts://Press Start 2P"
+    id: font_pixel_large
+    size: 14
+    glyphs: "!\"%()+=,-_.:°0123456789 abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+# --- The HUB75 matrix itself ---
+# Panels: 3x HYP10-3535(2727) 16*32-4S-1, chained 1 row x 3 columns, 96x16 total
+display:
+  - platform: four_scan_hub75
+    id: matrix_display
+    panel_width: 32
+    panel_height: 16
+    chain_length: 3
+    brightness: 128
+    update_interval: 50ms
+
+    # Seengreat RGB Matrix HUB75 S3 (V1.0) pin mapping
+    r1_pin: 5
+    g1_pin: 4
+    b1_pin: 6
+    r2_pin: 15
+    g2_pin: 7
+    b2_pin: 17
+    a_pin: 8
+    b_pin: 18
+    c_pin: 10
+    d_pin: 9
+    e_pin: 16
+    lat_pin: 11
+    oe_pin: 13
+    clk_pin: 12
+
+    lambda: |-
+      if (!id(sign_powered)) {
+        it.fill(Color(0, 0, 0));
+        return;
+      }
+
+      std::string msg;
+      Color c = Color((uint8_t) (id(text_r) * 255), (uint8_t) (id(text_g) * 255), (uint8_t) (id(text_b) * 255));
+      std::string title3 = id(plex_title_3).state;
+      std::string title1 = id(plex_title_1).state;
+      bool playing3 = title3 != "unknown" && !title3.empty();
+      bool playing1 = title1 != "unknown" && !title1.empty();
+
+      if (playing3) {
+        msg = "NOW PLAYING:  " + title3;
+        c = Color(255, 165, 0);
+      } else if (playing1) {
+        msg = "NOW PLAYING:  " + title1;
+        c = Color(255, 165, 0);
+      } else if (id(show_time)) {
+        char timebuf[16];
+        id(ha_time).now().strftime(timebuf, sizeof(timebuf), "%H:%M");
+        msg = id(idle_label).state + "     " + std::string(timebuf) + "     ";
+      } else {
+        msg = id(idle_label).state + "     ";
+      }
+
+      font::Font *active_font;
+      if (id(font_family_choice) == 0) {
+        if (id(font_size_choice) == 0) active_font = id(font_roboto_small);
+        else if (id(font_size_choice) == 1) active_font = id(font_roboto_medium);
+        else active_font = id(font_roboto_large);
+      } else {
+        if (id(font_size_choice) == 0) active_font = id(font_pixel_small);
+        else if (id(font_size_choice) == 1) active_font = id(font_pixel_medium);
+        else active_font = id(font_pixel_large);
+      }
+
+      std::string display_content;
+      if (playing3) {
+        display_content = "Now Playing: " + title3;
+      } else if (playing1) {
+        display_content = "Now Playing: " + title1;
+      } else {
+        display_content = id(idle_label).state;
+      }
+      if (display_content != id(last_published_msg)) {
+        id(last_published_msg) = display_content;
+        id(current_display_sensor).publish_state(display_content);
+      }
+
+
+      int x1, y1, w, h;
+      it.get_text_bounds(0, 0, msg.c_str(), active_font, TextAlign::TOP_LEFT, &x1, &y1, &w, &h);
+      int display_w = it.get_width();
+      int y_offset = (it.get_height() - h) / 2 - y1;  // true vertical centering, any font/size
+      if (w <= display_w) {
+        // fits on screen - center it, no scrolling
+        it.print((display_w - w) / 2, y_offset, active_font, c, TextAlign::TOP_LEFT, msg.c_str());
+      } else {
+        if (id(scroll_offset) < -w) {
+          id(scroll_offset) = display_w;
+        }
+        it.print(id(scroll_offset), y_offset, active_font, c, TextAlign::TOP_LEFT, msg.c_str());
+      }
