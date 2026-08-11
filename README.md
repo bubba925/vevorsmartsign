@@ -2,6 +2,9 @@
 
 A Home Assistant / ESPHome-integrated LED matrix sign built from a VEVOR programmable P10 LED sign, showing a clock and "Now Playing" info from Plex.
 
+## What I Wanted
+I wanted to create an LED sign for our home theater that would auto update via Home Assistant to show what was currently playing in the Home Theater. I have a TV acting as a constantly rotating movie poster based on my Plex library already that shows Now Playing when this happens but I wanted to add the sign as well. When nothing is playing, the sign would just scroll text like "Home Theater [TIME]". I could also change it for parties or any other scenario. All of these things turn on and off based on occupancy sensors in my home.
+
 The panels turned out to use a non-standard, undocumented internal wiring
 scheme that no existing library or driver supported out of the box. This repo
 contains the final working firmware **and** the full diagnostic process that
