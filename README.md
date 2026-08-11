@@ -7,7 +7,7 @@ scheme that no existing library or driver supported out of the box. This repo
 contains the final working firmware **and** the full diagnostic process that
 led to it, because the process is likely more useful to the next person than
 the code alone — if you have a similarly "unsupported" quarter-scan panel,
-the [troubleshooting journey](docs/TROUBLESHOOTING_JOURNEY.md) below is a
+the [troubleshooting journey](/TROUBLESHOOTING_JOURNEY.md) below is a
 template for figuring out yours too.
 
 ## Quick facts
@@ -20,7 +20,7 @@ template for figuring out yours too.
   documented anywhere else).
 - **Firmware:** ESPHome, with a custom external component (`four_scan_hub75`)
   wrapping the [mrcodetastic/ESP32-HUB75-MatrixPanel-DMA](https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA)
-  library, vendored locally (see [why](docs/TROUBLESHOOTING_JOURNEY.md#the-platformio-packaging-detour)).
+  library, vendored locally (see [why](/TROUBLESHOOTING_JOURNEY.md#the-platformio-packaging-detour)).
 - **Home Assistant integration:** current time, Plex "now playing" title for
   one specific user/client, and an editable idle-text entity — all via
   ESPHome's native HA API sensors, no MQTT needed.
@@ -41,8 +41,8 @@ and isn't something any existing HUB75 library or WLED build handles. It was
 reverse-engineered from scratch by methodically testing single pixels at
 known coordinates and reading back exactly where they physically appeared.
 
-See [`docs/TROUBLESHOOTING_JOURNEY.md`](docs/TROUBLESHOOTING_JOURNEY.md) for
-the full story, and [`docs/THE_FORMULA.md`](docs/THE_FORMULA.md) for the
+See [`/TROUBLESHOOTING_JOURNEY.md`](/TROUBLESHOOTING_JOURNEY.md) for
+the full story, and [`/THE_FORMULA.md`](/THE_FORMULA.md) for the
 technical breakdown of the final pixel-mapping formula.
 
 ## Repo contents
@@ -56,11 +56,10 @@ components/four_scan_hub75/            Custom ESPHome display component
   four_scan_hub75_display.cpp          C++ implementation - driver setup
   <vendored library files>             ESP32-HUB75-MatrixPanel-DMA + Adafruit
                                         GFX source, vendored flat (see below)
-docs/
+/
   HARDWARE.md                          Panel specs, pin mapping, board photos
   TROUBLESHOOTING_JOURNEY.md           The full debugging story
   THE_FORMULA.md                       How the pixel-mapping formula works
-  images/                              Diagrams and reference photos
 ```
 
 ## Quick start (if you have the *exact* same hardware)
@@ -82,10 +81,10 @@ multiplexing differently, and there's no universal standard. Don't assume our
 formula in `four_scan_hub75_display.h` will work unmodified.
 
 Instead:
-1. Read [`docs/THE_FORMULA.md`](docs/THE_FORMULA.md) to understand *why* our
+1. Read [`/THE_FORMULA.md`](/THE_FORMULA.md) to understand *why* our
    formula looks the way it does.
 2. Follow the single-pixel testing methodology in
-   [`docs/TROUBLESHOOTING_JOURNEY.md`](docs/TROUBLESHOOTING_JOURNEY.md#the-winning-methodology)
+   [`/TROUBLESHOOTING_JOURNEY.md`](/TROUBLESHOOTING_JOURNEY.md#the-winning-methodology)
    to derive your own panel's formula.
 3. Swap in your own formula in `CustomFourScanMapping::apply()`.
 
